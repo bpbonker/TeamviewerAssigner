@@ -1,0 +1,87 @@
+Public Class Form1
+    Dim EasyA As String
+    Dim OS As String
+    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
+        If TextBox1.Text = String.Empty Then
+            MsgBox("Please enter a valid site name!")
+            GoTo End1
+        Else GoTo precheck
+        End If
+precheck:
+        If My.Computer.FileSystem.DirectoryExists("C:\Program Files (x86)\TeamViewer") Then
+            OS = "${ProgramFiles(x86)}\TeamViewer\AssignmentData.json"
+        ElseIf My.Computer.FileSystem.DirectoryExists("C:\Program Files\TeamViewer") Then
+            OS = "${ProgramFiles}\TeamViewer\AssignmentData.json"
+        End If
+        GoTo prestep
+prestep:
+        ProgressBar1.PerformStep()
+        If My.Computer.FileSystem.FileExists("C:\Program Files (x86)\TeamViewer\AssignmentData.json") Then
+            GoTo step1
+        Else
+            Process.Start(My.Application.Info.DirectoryPath & "\packages\TeamViewer_Host_Setup.exe", "/S")
+            Do
+                Threading.Thread.Sleep(2000)
+            Loop Until My.Computer.FileSystem.FileExists("C:\Program Files (x86)\TeamViewer\AssignmentData.json")
+            Threading.Thread.Sleep(1000)
+            GoTo step0
+        End If
+step0:
+        If CheckBox1.Checked Then
+            EasyA = "true"
+        Else
+            EasyA = "false"
+        End If
+        GoTo step1
+step1:
+        ProgressBar1.PerformStep()
+        If My.Computer.FileSystem.FileExists(My.Application.Info.DirectoryPath & "\packages\ghost.bat") Then
+            My.Computer.FileSystem.DeleteFile(My.Application.Info.DirectoryPath & "\packages\ghost.bat")
+            GoTo step1
+        Else
+            Dim batch As System.IO.StreamWriter
+            batch = My.Computer.FileSystem.OpenTextFileWriter(My.Application.Info.DirectoryPath & "\packages\ghost.bat", True, System.Text.Encoding.ASCII)
+            batch.WriteLine("start "" "" ""%~dp0tma.exe""  -apitoken " + My.Settings.Token + " -datafile """ + OS + """ -devicealias ""${RemoteDevice}" + TextBox1.Text + """ -allowEasyAccess=" + EasyA + " -wait=10 -reassign=true")
+            batch.Close()
+            Process.Start(My.Application.Info.DirectoryPath & "\packages\ghost.bat")
+            GoTo step2
+        End If
+step2:
+        ProgressBar1.PerformStep()
+        Threading.Thread.Sleep(10000)
+        Dim runbat As New ProcessStartInfo()
+        runbat.UseShellExecute = True
+        runbat.FileName = (My.Application.Info.DirectoryPath & "\packages\ghost.bat")
+        runbat.WorkingDirectory = ""
+        runbat.Verb = "runas"
+        Process.Start(runbat)
+        ProgressBar1.PerformStep()
+End1:
+    End Sub
+
+    Private Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
+        My.Settings.Token = TextBox2.Text
+        My.Settings.Save()
+    End Sub
+
+    Private Sub TextBox2_TextChanged(sender As Object, e As EventArgs) Handles TextBox2.TextChanged
+
+    End Sub
+
+    Private Sub Button3_Click(sender As Object, e As EventArgs) Handles Button3.Click
+        My.Settings.Token = " "
+        My.Settings.Save()
+    End Sub
+
+    Private Sub Label5_Click(sender As Object, e As EventArgs) Handles Label5.Click
+
+    End Sub
+
+    Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+    End Sub
+
+    Private Sub Button4_Click(sender As Object, e As EventArgs) Handles Button4.Click
+        Form2.Show()
+    End Sub
+End Class
